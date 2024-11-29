@@ -1,0 +1,49 @@
+version: '3'
+
+services:
+  db:
+    image: postgres:17
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: masterkey
+      POSTGRES_DB: warehouse_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    networks:
+      - shop-network
+
+  warehouse-service:
+    build:
+      context: ./warehouse-service
+    ports:
+      - "8081:8081"
+    environment:
+      - QUARKUS_DATASOURCE_URL=jdbc:postgresql://db:5432/warehouse_db
+      - QUARKUS_DATASOURCE_USERNAME=postgres
+      - QUARKUS_DATASOURCE_PASSWORD=masterkey
+    depends_on:
+      - db
+    networks:
+      - shop-network
+
+  order-service:
+    build:
+      context: ./order-service
+    ports:
+      - "8082:8082"
+    environment:
+      - QUARKUS_DATASOURCE_URL=jdbc:postgresql://db:5432/order_db
+      - QUARKUS_DATASOURCE_USERNAME=postgres
+      - QUARKUS_DATASOURCE_PASSWORD=masterkey
+    depends_on:
+      - db
+    networks:
+      - shop-network
+
+networks:
+  shop-network:
+
+volumes:
+  pgdata:
